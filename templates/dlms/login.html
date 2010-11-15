@@ -1,0 +1,44 @@
+<html>
+    <head>
+        <title>USIC: Система керування завантаженнями Студентського Інтернет-центру НаУКМА</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        
+        <link rel="stylesheet" href="/media/style.css" type="text/css">
+    </head>
+    
+    <body>
+   
+    <div id="logo_wrapper">
+       <div class="container">
+           <div id="header">
+               <div id="username">{{ user }}</div>
+                        
+                    <div id="logo"> Система керування завантаженнями </div>
+                        
+            </div>
+        </div>
+    </div>
+             
+    <div class="container login_form">
+        {% if errorFlag %}
+            <p class="error_text">WINDMILLS DON'T WORK THAT WAY!!!</p>
+        {% endif %}
+        <form action="/dlms/login/" method="POST">
+            <table>
+                <tr>
+                    <td>Логін</td><td><input class="login" name="username" type="text"></td>
+                </tr>
+                <tr>
+                    <td>Пароль</td><td><input class="login" name="password" type="password"></td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2"><input type="submit" id="login_button" value="Увійти"></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="footer">
+        Сервіс працює на базі <a href="http://www.transmissionbt.com">Transmission</a>.
+    </div>
+    </body>
+</html>

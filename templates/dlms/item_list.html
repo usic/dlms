@@ -1,0 +1,84 @@
+{% for torrent in torrent_list %}
+    <div class="torrentItem">
+        <div class="torrentName">
+            {% if torrent.files_count == 1 %}
+                {% if torrent.first_file.finished %}
+                    <a href="/downloads/{{ torrent.hashString }}/{{ torrent.first_file.name|urlencode }}">
+                        {{ torrent.name }}
+                    </a>
+                {% else %}
+                    {{ torrent.name }}
+                {% endif %}
+            {% else %}
+                {{ torrent.name }}, файлів: {{ torrent.files_count }}
+            {% endif %}    
+        </div>
+        <div class="torrentTotalSize">
+            {{ torrent.total_size }}
+        </div>
+        <div class="torrent_progress">
+            <div class="progress_bar">
+                <div
+                    style="width:{{ torrent.progress|floatformat }}%"
+                    class="progress_indicator{% if torrent.finished %}_completed{% endif %}">
+                </div>
+            </div>
+            <div class="torrentTotalPercent">{{ torrent.progress|floatformat:2 }}%</div>
+        </div>
+
+        <div class="torrent_info">
+            <div class="torrentAddedDate">
+            Додано: {{ torrent.date_added|date:"Y-m-d H:i:s" }},
+            </div>
+            
+            {% if torrent.status == 'downloading'  %}
+            <div class="torrentEta">   
+                {% if torrent.eta == None %}
+                    час завантаження невідомий
+                {% else %}
+                    залишилось {{ torrent.eta }}
+                {% endif %}
+            </div>
+            {% else %}  
+            <div class="torrentDoneDate">
+                завершено: {{ torrent.date_done|date:"Y-m-d H:i:s" }}
+            </div>
+            {% endif %} 
+            <div class="actions">
+                <div class="deleteTorrent">
+                    <a href="{% url dlms.views.delItem torrent.hashString %}" onclick="return confirmDelete();">видалити</a>
+                </div>
+            </div>
+        </div>
+        
+        {% if torrent.files_count > 1 %}
+            <ul class="files_info">
+           
+                {% for file in torrent.files %}
+                    <li class="file_item">
+                        <div class="file_name">
+                            {% if file.finished %}
+                                <a href="/downloads/{{ torrent.hashString }}/{{ file.name|urlencode }}">{{ file.name_short }}</a>
+                            {% else %}
+                                {{ file.name_short }}
+                            {% endif %}
+                        </div>       
+                        
+                        <div class="file_size">
+                            {{ file.size_bytes }}
+                        </div>
+                        
+                        <div class="file_completed">
+                            {{ file.completed_percent }} %
+                        </div>
+                    </li>     
+                {% endfor %}
+                    
+            
+            </ul>
+        {% endif %}
+            
+    </div>
+
+{% endfor %} 
+
