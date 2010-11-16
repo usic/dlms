@@ -17,7 +17,8 @@ from transmissionrpc import TransmissionError
 import os
 import shutil
 import urllib2
-import libtorrent
+from bencode import *
+from hashlib import sha1
 
 def format_data(value):
     """Utility function to present user-friendly bytes"""
@@ -85,8 +86,12 @@ def index(request):
 
             tempFileHandle = file(tempFileName, 'r')
             
-            torrentInfo = libtorrent.torrent_info(libtorrent.bdecode(tempFileHandle.read()))
-            torrentHashString = str(torrentInfo.info_hash())
+            #torrentInfo = libtorrent.torrent_info(libtorrent.bdecode(tempFileHandle.read()))
+            #torrentHashString = str(torrentInfo.info_hash())
+            
+            torrentInfo = bdecode(tempFileHandle.read())
+            torrentHashString = sha1(bencode(torrentInfo['info'])).hexdigest()
+            
             
             torrentListForHash = Torrent.objects.filter(transmission_hash_string=torrentHashString)
             
