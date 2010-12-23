@@ -27,23 +27,39 @@
         </div>
 
         <div class="torrent_info">
-            <div class="torrentAddedDate">
+            {% if adminFlag %}
+                <div>
+                    Користувачі: 
+                    {% for username in torrent.usernames %} 
+                        {{ username }}
+                        {% if not forloop.last %}, {% endif %} 
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
             Додано: {{ torrent.date_added|date:"Y-m-d H:i:s" }},
-            </div>
+            
             
             {% if torrent.status == 'downloading'  %}
-            <div class="torrentEta">   
+            
                 {% if torrent.eta == None %}
                     час завантаження невідомий
                 {% else %}
                     залишилось {{ torrent.eta }}
                 {% endif %}
-            </div>
+           
             {% else %}  
-            <div class="torrentDoneDate">
+            
                 завершено: {{ torrent.date_done|date:"Y-m-d H:i:s" }}
-            </div>
+            
             {% endif %} 
+            
+            {% if torrent.files_count > 1 %}
+            <div onclick="toggleFileList('file_info_{{ forloop.counter}}');" class="actions toggle_file_list">
+                згорнути/розгорнути список файлів
+            </div>
+            {% endif %}
+            
             <div class="actions">
                 <div class="deleteTorrent">
                     <a href="{% url dlms.views.delItem torrent.hashString %}" onclick="return confirmDelete();">видалити</a>
@@ -52,7 +68,7 @@
         </div>
         
         {% if torrent.files_count > 1 %}
-            <ul class="files_info">
+            <ul class="files_info" id="file_info_{{ forloop.counter}}">
            
                 {% for file in torrent.files %}
                     <li class="file_item">

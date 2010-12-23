@@ -136,7 +136,7 @@ div.login_form {
 }
 
 .torrent_info {
-    height:30px;
+   
 }
 
 #global_actions {
@@ -156,9 +156,13 @@ div.login_form {
 
 .actions {
     float: right;
-    padding: 5px;
+    padding: 5px;   
+}
 
-    
+.toggle_file_list {
+    font-size: 80%;
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 .deleteTorrent a {

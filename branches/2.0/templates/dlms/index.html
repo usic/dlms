@@ -12,6 +12,7 @@
                 $.get(refreshURL, params, function(data)
                                     {
                                         $("#itemList").html(data);
+                                        hideAllFileLists();
                                     });
             }
             
@@ -30,7 +31,25 @@
             {
                 return confirm("Ви впевнені, що хочете видалити цей торрент? Усі ваші дані буде втрачено!");
             }
+            
+            function toggleFileList(fileListId)
+            {
+                $('#' + fileListId).toggle();
+            }
 
+            function hideAllFileLists()
+            {
+                torrentCount = {{ torrent_list|length }};
+                    
+                for (i = 1; i <= torrentCount; i++)
+                {
+                    $('#file_info_' + i).hide();
+                        
+                }
+            }
+            
+            $(document).ready(hideAllFileLists);
+            
         </script>
         <link rel="stylesheet" href="/media/style.css" type="text/css">
         <title>USIC: Система керування завантаженнями Студентського Інтернет-центру НаУКМА</title>
@@ -39,9 +58,15 @@
             <div id="logo_wrapper">
                 <div class="container">
                     <div id="header">
-                        <div id="username">{{ user }}</div>
+                        <div id="username">
+                            {{ user }}
+                            
+                            {% if adminFlag %}
+                                (admin)
+                            {% endif %}
+                        </div>
                         
-                            <div id="logo"> Система керування завантаженнями </div>
+                        <div id="logo"> Система керування завантаженнями </div>
                         
                     </div>
                 </div>
@@ -62,6 +87,12 @@
                     <input id="url" name="url" type="text">
                     <input id="add_button" value="Додати" type="submit">
                 </form>
+                
+                <form enctype="multipart/form-data" method="post" action="">
+                    {{ uploadForm }}
+                    <input type="submit" id="upload_file_button" value="Завантажити">
+                </form>
+                file name = {{ fileName }}, size = {{ fileSize }} <br>
 
                 <div id="global_actions">
                     <span id="updateList">

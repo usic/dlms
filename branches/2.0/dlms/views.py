@@ -20,6 +20,14 @@ import urllib2
 from bencode import *
 from hashlib import sha1
 
+import download
+
+from django import forms
+
+class UploadFileForm(forms.Form):
+    file  = forms.FileField("Файл:")
+
+
 def format_data(value):
     """Utility function to present user-friendly bytes"""
     units = ("Байт", "КіБайт", "МіБайт", "ГіБайт")
@@ -57,6 +65,7 @@ def index(request):
     user = request.user
     username = user.username
     
+    # the transmission client object, used for torrent management
     tc = transmissionrpc.Client(settings.TRANSMISSION_SETTINGS['host'],
                                 port=settings.TRANSMISSION_SETTINGS['port'],
                                 user=settings.TRANSMISSION_SETTINGS['user'],
@@ -65,66 +74,126 @@ def index(request):
     url = ''
     magicString = ''
     
+    adminFlag = False
+    
+    if user.is_staff:
+            adminFlag = True
+            
+    uriToAdd = None
+    torrent = None
+    
+    fileName = 'phony'
+    fileSize = -999
+    
     if request.method == 'POST':
-        url = request.POST['url']
         
-        try:
-            # read the first 11 bytes to determine whether this is a torrent fileList
-            handle = urllib2.urlopen(url) 
-            magicString = handle.read(11)
-        except ValueError, e:
-            errorFlag = True
         
-        if magicString == "d8:announce":
-            # download the torrent into a temp dir
-            tempFileName = "/tmp" + "/" + os.path.basename(url)
+        form = UploadFileForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            # process the uploaded torrent file
+            uploadedFile = request.FILES['file']
             
-            tempFileHandle = file(tempFileName, 'w')
-            tempFileHandle.write(magicString)
-            tempFileHandle.write(handle.read())            
-            tempFileHandle.close()
+            
+            tempFileName = '/tmp/' + uploadedFile.name
+            destination = open(tempFileName, 'wb+')
+            
+            for chunk in uploadedFile.chunks():
+                destination.write(chunk)
+                if len(chunk) > 11:
+                    magicString = chunk[0:11]
+                    
+                    if magicString == "d8:announce":
+                        fileName = uploadedFile.name
+                        fileSize = uploadedFile.size
+                        
+            destination.close()
+            
+            if fileSize != -999:
+                torrent = download.Torrent('', fileName=tempFileName)
+            
+                torrentHashString = torrent.GetHashstring()
+                uriToAdd = torrent.GetURI()
 
-            tempFileHandle = file(tempFileName, 'r')
+        
+        else:
+            url = request.POST['url']
             
-            #torrentInfo = libtorrent.torrent_info(libtorrent.bdecode(tempFileHandle.read()))
-            #torrentHashString = str(torrentInfo.info_hash())
+        
+            # if the url starts with "magnet:", it is a magnet link, so add it to
+            # transmission by URL
+            if url.startswith("magnet:"):
+                magnet = download.Magnet(url)
+                torrentHashString = magnet.GetHashstring()
+                uriToAdd = url
+            else:    
+                try:
+                    # read the first 11 bytes to determine whether this is a torrent fileList
+                    handle = urllib2.urlopen(url) 
+                    magicString = handle.read(11)
+                except ValueError, e:
+                    errorFlag = True
+                
+                if magicString == "d8:announce":
+                    torrent = download.Torrent(url)
             
-            torrentInfo = bdecode(tempFileHandle.read())
-            torrentHashString = sha1(bencode(torrentInfo['info'])).hexdigest()
+                    torrentHashString = torrent.GetHashstring()
+                    uriToAdd = torrent.GetURI()
+                
+        if not uriToAdd is None:
             
+            #torrentListForHash = Torrent.objects.filter(transmission_hash_string=torrentHashString, user=user)
             
-            torrentListForHash = Torrent.objects.filter(transmission_hash_string=torrentHashString)
+            torrentCountForHash = Torrent.objects.filter(transmission_hash_string=torrentHashString).count()
+            torrentCountForHashUser = Torrent.objects.filter(transmission_hash_string=torrentHashString, user=user).count()
             
-            # if the hashstring of the torrent is already in the db, 
+            # if the hashstring of the torrent is already in the db, but not for this user, 
             # just add it to the db without adding to transmission
-            if len(torrentListForHash) == 0:
+            #if len(torrentListForHash) == 0:
+            if torrentCountForHash == 0:
         
                 # add the torrent to transmission
-                #globalDownloadDir = "/var/www/dlms_downloads/"
                 globalDownloadDir = settings.GLOBAL_DOWNLOAD_DIR
                 userDir = globalDownloadDir + torrentHashString
         
                 try:
-                    addedTorrent = tc.add_uri(tempFileName, download_dir = userDir)
+                    addedTorrent = tc.add_uri(uriToAdd, download_dir = userDir)
                 except TransmissionError, e:
                     errorFlag = True
     
-            # save the record to the db
-            torrent = Torrent(url=url, user=user, transmission_hash_string=torrentHashString)
-            torrent.save()
-       
-            # delete the temp torrent file
-            os.remove(tempFileName)
+            if torrentCountForHashUser == 0:
+                # save the record to the db
+                torrentDB = Torrent(url=url, user=user, transmission_hash_string=torrentHashString)
+                torrentDB.save()
+    
+            if not torrent is None:
+                torrent.DeleteFile()
+                
         else:
             errorFlag = True
             
-    userTorrents = user.torrent_set.all()
+    userTorrents = []    
     
-    hashStrings = [userTorrent.transmission_hash_string for userTorrent in userTorrents]    
+    if user.is_staff:
+        userTorrents = Torrent.objects.all()
+    else:
+        userTorrents = user.torrent_set.all()
+    
 
+    userHashstrings = {}
+    
+    for userTorrent in userTorrents:
+        hashString = userTorrent.transmission_hash_string
+        
+        if not hashString in userHashstrings:
+            userHashstrings[hashString] = []
+
+        userHashstrings[hashString].append(userTorrent.user.username)
+            
     torrentList = {}
     
-    if hashStrings:
+    if userHashstrings:
+        hashStrings = userHashstrings.keys()
         
         torrentList = tc.info(hashStrings)
     
@@ -155,32 +224,51 @@ def index(request):
             
             totalSizeBytes += item_description['size']
         
+       
         presTorrent = {
             'name': torrent.name,
+            'usernames': userHashstrings[torrent.hashString],
             'hashString': torrent.hashString,
             'progress': torrent.progress,
             'status': torrent.status,
             'date_added': torrent.date_added,
             'date_done': torrent.date_done,
             'eta': torrent.eta,
-            'files': files,
             'total_size': format_data(totalSizeBytes),
             'finished': torrent.progress == 100.0,
-            'files_count': len(torrent.files().items()),
-            'first_file': files[0]
+            
             }
+            
+        if len(files) > 0:
+            presTorrent['files'] = files
+            presTorrent['first_file'] = files[0]
+            presTorrent['files_count'] = len(torrent.files().items())
+            
+            
         presList.append(presTorrent)
 
+       
+
+
+    
     # if GET, just show the list and the add form
     if request.method == 'GET':
         
+        form = UploadFileForm()
+
+        
+        
         if 'list_only' in request.GET:
-            return render_to_response('dlms/item_list.html', {'torrent_list': presList})
+            return render_to_response('dlms/item_list.html', {'torrent_list': presList, 'adminFlag': adminFlag})
      
     return render_to_response('dlms/index.html', {'torrent_list': presList,
                                                           'user': username,
                                                           'errorFlag': errorFlag,
-                                                          'torrentURL': url})
+                                                          'adminFlag': adminFlag,
+                                                          'torrentURL': url,
+                                                          'uploadForm': form,
+                                                          'fileName': fileName,
+                                                          'fileSize': fileSize})
            
 def delItem(request, hash_string):
 
