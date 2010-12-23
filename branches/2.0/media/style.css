@@ -1,0 +1,203 @@
+/* Copyright 2010 Roman Yepishev, roman.yepishev@yandex.ua */
+body, table {
+    margin: 0;
+    padding: 0;
+    font-family: Liberation Sans, sans-serif;
+    font-size: 12pt;
+    color: black;
+    background-color: white;
+}
+
+#logo_wrapper {
+    width: 100%;
+    height: 40px;
+    /*background-color: #77779c;*/
+}
+
+div.container {
+    margin-left: auto;
+    margin-right: auto;
+    width: 750px;
+}
+
+div.login_form {
+    margin-top: 10px;
+    text-align: center;
+    line-height: 30px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 200px;
+    
+}
+
+.label {
+    text-align: center;
+}
+
+#login_button {
+    height: 30px;
+}
+
+
+#logo {
+    background-image: url(/media/usic_100.jpg);
+    background-position: 0px -30px;
+    background-color: #00005c;
+    color: #f0f0f0;
+    height: 40px;
+    background-repeat: no-repeat;
+    font-size: 120%;
+    line-height: 40px;
+    text-indent: 120px;
+    text-decoration: none;
+}
+
+#username {
+    float: right;
+    font-size: 120%;
+    font-weight: bold;
+    padding: 10px;
+    color: #aaaaaa
+}
+
+#hello_text {
+    margin-top: 10px;
+}
+
+.error_text {
+    color: red;
+}
+
+#upload_form {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+#upload_form * {
+    height:  30px;
+}
+
+#url {
+    border: 1px solid #888888;
+    width: 640px;
+    }
+
+.login {
+    border: 1px solid #888888;
+}
+
+#add_button {
+    width: 100px;
+}
+
+#itemList {
+    border-top: 1px dotted #cfcfcf;
+    margin-top: 5px;
+}
+
+#footer {
+    clear: both;
+    text-align: center;
+    font-size: 80%;
+    color: #555555;
+    margin-top: 20px;
+}
+
+.torrentItem {
+    margin-top: 5px;
+    border-bottom: 1px dotted #cfcfcf;
+    clear: both;
+}
+
+.torrentName {
+    font-weight: bold;
+    padding: 10px;
+    float: left;
+}
+.torrentTotalSize {
+    padding: 10px;
+    text-align: right;
+}
+.torrentTotalPercent {
+    text-align: right;
+}
+
+.torrent_progress {
+    clear: all;
+    padding-left: 20px;
+    padding-right: 20px;
+    height: 30px;
+}
+
+.torrentDoneDate, .torrentAddedDate, .torrentEta {
+    clear: all;
+    float: left;
+    padding: 5px;
+}
+
+.torrent_info {
+    height:30px;
+}
+
+#global_actions {
+    text-align: right;
+    font-size: 80%;
+    
+}
+
+#global_actions a {
+    text-decoration: none;
+}
+
+#updateList {
+    
+    border-bottom: 1px dashed blue;
+}
+
+.actions {
+    float: right;
+    padding: 5px;
+
+    
+}
+
+.deleteTorrent a {
+    color: red;
+    font-size: 80%;
+}
+
+.file_item {
+    font-size: 90%;
+}
+
+.file_name {
+    float: left;
+}
+
+.file_size {
+    text-align: right;
+}
+
+.file_completed {
+    text-align: right;
+    margin-bottom: 5px;
+}
+
+.progress_bar {
+    float: left;
+    clear: both;
+    width: 630px;
+    height: 20px;
+    border: 1px solid #00005c;
+}
+.progress_indicator, .progress_indicator_completed {
+    color: #fff;
+    height: 20px;
+    background-color: #33335c;
+    text-align: right;
+    padding-right: 2px;
+}
+
+.progress_indicator_completed {
+    background-color: #080;
+}
